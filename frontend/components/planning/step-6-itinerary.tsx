@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Car, Clock, Download, Hotel, MapPin, RefreshCw, Save, Share, Utensils } from "lucide-react";
+import { Camera, Car, Clock, CreditCard, Download, Hotel, MapPin, RefreshCw, Save, Utensils } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 interface PlanningStep6Props {

@@ -106,14 +106,6 @@ interface PlanningStep4Props {
   onNext: () => void
   onPrev: () => void
 }
-  // Interface for hotel summary data
-  interface HotelSummary {
-    place_id: string;
-    name: string;
-    avg_rating: number;
-    num_reviews: number;
-    summary: string;
-  }
 
 const amenityIcons: Record<string, any> = {
   "Free WiFi": Wifi,
@@ -153,12 +145,10 @@ export function PlanningStep4({ tripData, updateTripData, onNext, onPrev }: Plan
   )
   const { data: hotelSummaries } = useHotelSummaries()
   
-    // Pre-process summaries data to handle the nested structure
-    const summariesData = useMemo(() => {
-      if (!hotelSummaries?.data) return {};
-      console.log('Processing summaries:', hotelSummaries.data);
-      return hotelSummaries.data;
-    }, [hotelSummaries]);
+  // Process summaries data structure
+  const summariesData = useMemo(() => {
+    return hotelSummaries?.data || {};
+  }, [hotelSummaries]);
 
   // Sync local state with prop changes
   useEffect(() => {
@@ -245,20 +235,18 @@ export function PlanningStep4({ tripData, updateTripData, onNext, onPrev }: Plan
 
                   {/* AI-generated review summary (if available) */}
                   {(() => {
-                    const summariesLookup = summariesData || hotelSummaries?.data || {};
-                    let found: any | undefined = undefined;
-
-                    // direct match by id
-                    if (summariesLookup[hotel.id]) {
-                      found = summariesLookup[hotel.id];
-                    } else {
-                      // try matching by name
-                      found = Object.values(summariesLookup).find((s: any) => s?.name === hotel.name);
-                    }
-
-                    return found?.summary ? (
+                    // Find matching summary by hotel ID or name
+                    const foundSummary = Object.values(summariesData).find(
+                      (summary: any) => 
+                        summary?.place_id === hotel.id || 
+                        summary?.name === hotel.name
+                    );
+                    
+                    return foundSummary?.summary ? (
                       <div className="my-3 p-2 bg-primary/5 rounded-md">
-                        <p className="text-sm text-muted-foreground italic line-clamp-3">{found.summary}</p>
+                        <p className="text-sm text-muted-foreground italic line-clamp-3">
+                          {foundSummary.summary}
+                        </p>
                       </div>
                     ) : null;
                   })()}

@@ -187,6 +187,16 @@ export const useActivities = (destinationId: string = ''): UseApiResult<Activity
   )
 }
 
+export const useHotelSummaries = (): UseApiResult<Record<string, any>> => {
+  const cacheKey = `hotel_summaries`
+
+  return useApi(
+    () => hotelService.getHotelSummaries(),
+    [],
+    cacheKey
+  )
+}
+
 // Special hook for itinerary generation with longer cache and manual trigger
 export const useItinerary = (tripData: any, autoFetch: boolean = false): UseApiResult<Itinerary> & { generateItinerary: () => void } => {
   const [manualTrigger, setManualTrigger] = useState(0)
