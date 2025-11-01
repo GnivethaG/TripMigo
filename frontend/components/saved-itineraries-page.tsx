@@ -48,6 +48,29 @@ const Eye = ({ className }: { className?: string }) => (
   </svg>
 )
 
+
+// New Icon for Chatbot Button
+const MessageSquare = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+)
+
+// --- New Chatbot Button Component ---
+
+const ChatbotButton = () => {
+  return (
+    <Button
+      className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-xl z-50"
+      size="icon"
+      // The original request was to navigate to another page, which this line handles:
+      onClick={() => window.location.href = '/assistant_chat.html'}
+    >
+      <MessageSquare className="h-6 w-6" />
+    </Button>
+  )
+}
+
 interface SavedItinerariesPageProps {
   onLoadItinerary: (itineraryId: string) => void
 }
@@ -87,6 +110,8 @@ export function SavedItinerariesPage({ onLoadItinerary }: SavedItinerariesPagePr
         <Button asChild>
           <Link href="/planning">Plan Your First Trip</Link>
         </Button>
+         {/* ADDED CHATBOT BUTTON HERE */}
+        <ChatbotButton />
       </div>
     )
   }
@@ -153,8 +178,11 @@ export function SavedItinerariesPage({ onLoadItinerary }: SavedItinerariesPagePr
                   className="flex-1 bg-transparent"
                   onClick={() => onLoadItinerary(itinerary.id)}
                 >
-                  <Eye className="h-4 w-4 mr-1" />
-                  View
+                  {/* FIX: Wrap the icon and text in a Fragment to satisfy Radix Slot component */}
+                  <>
+                    <Eye className="h-4 w-4 mr-1" />
+                    View
+                  </>
                 </Button>
                 <Button
                   variant="outline"
