@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>TripMigo AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      /* --- CSS REMAINS UNCHANGED FOR STYLE CONSISTENCY --- */
+      :root {
+        --primary-color: #007bff;
+        --secondary-color: #f0f8ff;
+        --text-color-light: #fff;
+        --text-color-dark: #333;
+        --background-light: #ffffff;
+        --background-dark: #121212;
+        --message-bot-bg-light: #f1f3f4;
+        --message-user-bg-light: #d1e7ff;
+        --message-bot-bg-dark: #333;
+        --message-user-bg-dark: #004c99;
+        --border-color-light: #ddd;
+        --border-color-dark: #444;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+        }
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+          Arial, sans-serif;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        color: light-dark(var(--text-color-dark), var(--text-color-light));
+        background-color: light-dark(var(--background-light), var(--background-dark));
+      }
+
+      header {
+        padding: 1rem;
+        border-bottom: 1px solid light-dark(var(--border-color-light), var(--border-color-dark));
+        text-align: center;
+        background-color: light-dark(var(--background-light), var(--background-dark));
+      }
+
+      header h1 {
+          margin: 0;
+          font-size: 1.5rem;
+          color: var(--primary-color);
+      }
+
+      header p {
+          margin: 0.25rem 0 0;
+          font-size: 0.9rem;
+          opacity: 0.7;
+      }
+
+      #chat-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #messages {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+      }
+
+      .message {
+        max-width: 80%;
+        padding: 0.75rem 1rem;
+        border-radius: 1.25rem;
+        line-height: 1.5;
+        word-wrap: break-word;
+      }
+
+      .message.user {
+        align-self: flex-end;
+        background-color: light-dark(var(--message-user-bg-light), var(--message-user-bg-dark));
+        color: light-dark(var(--text-color-dark), var(--text-color-light));
+        border-bottom-right-radius: 0.25rem;
+      }
+
+      .message.bot {
+        align-self: flex-start;
+        background-color: light-dark(var(--message-bot-bg-light), var(--message-bot-bg-dark));
+        border-bottom-left-radius: 0.25rem;
+      }
+
+      .message.loading {
+          align-self: flex-start;
+          background-color: light-dark(var(--message-bot-bg-light), var(--message-bot-bg-dark));
+          border-bottom-left-radius: 0.25rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+      }
+
+      .spinner {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .sources {
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid light-dark(var(--border-color-light), var(--border-color-dark));
+        color: light-dark(var(--text-color-dark), var(--text-color-light));
+      }
+
+      .sources h3 {
+          margin: 0 0 0.5rem;
+          font-size: 0.9rem;
+          font-weight: 600;
+      }
+
+      .sources ol {
+          margin: 0;
+          padding-left: 1.2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          font-size: 0.75rem;
+      }
+
+      .sources a {
+          color: var(--primary-color);
+          text-decoration: none;
+      }
+      .sources a:hover {
+          text-decoration: underline;
+      }
+
+      footer {
+        padding: 1rem;
+        border-top: 1px solid light-dark(var(--border-color-light), var(--border-color-dark));
+        background-color: light-dark(var(--background-light), var(--background-dark));
+      }
+
+      #chat-form {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      #prompt-input {
+        flex: 1;
+        padding: 0.75rem;
+        border: 1px solid light-dark(var(--border-color-light), var(--border-color-dark));
+        border-radius: 2rem;
+        font-size: 1rem;
+        color: light-dark(var(--text-color-dark), var(--text-color-light));
+        background-color: transparent;
+      }
+
+      #prompt-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+
+      #chat-form button {
+        background-color: var(--primary-color);
+        color: var(--text-color-light);
+        border: none;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: background-color 0.2s;
+      }
+
+      #chat-form button:hover {
+        background-color: #0056b3;
+      }
+
+      #chat-form button:disabled {
+        background-color: #a0a0a0;
+        cursor: not-allowed;
+      }
+
+      #chat-form button svg {
+        fill: var(--text-color-light);
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "marked": "https://esm.sh/marked@^15.0.7"
+        }
+      }
+    </script>
+    <script type="module">
+      import { marked } from 'marked';
+      
+      // Wrap the entire execution logic in an IIFE to provide a function scope
+      // and allow for early 'return' statements.
+      (async function() {
+        
+          // --- API CONFIG ---
+          const API_KEY = "AIzaSyD2MsmZEKB_IGQPhZSNxCi5wJBiaS7gnS4"; // Placeholder for runtime injection
+          const API_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
+
+          // Initial chat history structure (used for sending context to the API)
+          let chatHistory = []; 
+
+          // --- TRIPMIGO PERSONA AND PROTOCOLS (START) ---
+          // This is used as the system instruction
+          const SYSTEM_PROMPT = `You are a chatbot, a friendly, dynamic, and highly supportive AI Travel Assistant named TripMigo AI. Your role begins after the initial itinerary has been created; you do not generate the primary trip plan, but rather you focus on providing real-time, contextual guidance for the user while they are traveling. Your goal is to be their dependable source of information and problem-solver, assisting them with any issues or queries that arise on the go. As the user asks questions about their current location or their existing trip plan, you must prioritize finding up-to-date, practical information by utilizing your external Google Search tool for grounding details such as current weather, local transportation delays, restaurant opening hours, immediate nearby services (like a pharmacy or ATM), or facts about an attraction they are currently visiting. Specific tasks include suggesting immediate alternative activities if an existing plan is canceled or affected by weather, finding and recommending nearby points of interest or necessities, offering quick translations of essential phrases, and providing relevant cultural, safety, or etiquette tips. Always respond with an enthusiastic, supportive, and concise tone, focusing only on the user's current query without making unsolicited changes to the main trip structure. If a request is ambiguous (e.g., "Where is a good cafe?"), politely ask for the traveler's current approximate location or time to provide the most accurate and actionable assistance.
+
+          In addition to your core directive, your responses must follow these specific protocols:
+
+          Protocol 1: Location and Climate Check
+          When the user states their current location (e.g., "I'm in Paris near the Louvre" or "What's the weather like in Rome now?"), you must immediately perform a Google Search for the current climate conditions (temperature, precipitation, and a general forecast summary) for that specific location.
+          Template: "Got it! You're in/near [User Location]. I just checked the climate for you—it looks like it's currently [Temperature] and [General Condition, e.g., cloudy/sunny/raining]. [Offer a small, relevant tip based on the condition, e.g., 'Might want to grab a light jacket!' or 'Perfect weather for walking!']. How can I help you with your next step?"
+
+          Protocol 2: Urgent Needs and Necessities (Hospital, Pharmacy, etc.)
+          When the user expresses an urgent need (e.g., "I need to visit a hospital," "I need a medical store," or "Where is the nearest pharmacy?"), you must use Google Search to find the closest, highly-rated location relative to the last known or stated user location. Prioritize safety and accessibility.
+          Template: "I understand, let's get that sorted right away. The nearest [Type of Need, e.g., hospital/pharmacy] with good reviews is [Name of Location] at [Specific Address or Intersection]. [If urgent, add a quick instruction, e.g., 'If it's an emergency, please call the local emergency number immediately.'] I'm here to help you navigate there if you need directions!"
+
+          Protocol 3: Hunger and Food Cravings
+          When the user states they are hungry or expresses a specific food desire (e.g., "I'm hungry," "I need a great pizza place," or "Where can I find a fruit shop?"), you must use Google Search to provide a single, top-rated, highly relevant recommendation based on the user's expressed desire and their last known location.
+          Template for General Hunger: "Sounds like it's time for a bite! Based on your location, I recommend [Name of Restaurant/Cafe]—it has fantastic [Mention key feature, e.g., local reviews/ambiance] and it's located just [Distance/Direction] from you. Is that what you were looking for, or should I search for something specific?"
+          Template for Specific Food: "Ooh, [Specific food item, e.g., fresh fruit] sounds perfect! The best-rated nearby option is [Name of Shop/Market] at [Address/Direction]. They are known for [Mention a key item]. Enjoy!"
+
+          Protocol 4: Mood and Emotional State
+          When the user expresses a mood or a general feeling (e.g., "I'm bored," "I'm feeling romantic," or "I need to cheer up!"), you must interpret this as a request for a quick activity suggestion. You will use Google Search to find a nearby, appropriate activity that matches the mood.
+          Template for Bored/Need Cheering Up: "Let's change that mood! How about checking out [Name of Activity/Place, e.g., a quirky museum/local park]? It's highly-rated for a fun, quick visit and is located [Direction/Distance]. What do you think?"
+          Template for Relaxed/Romantic: "That sounds lovely! For a [Mood, e.g., relaxing/romantic] vibe, I recommend a stroll through [Name of Spot, e.g., a historic garden/scenic viewpoint] at [Address/Direction]. It's the perfect spot to [Mention specific activity, e.g., watch the sunset]."
+
+          You must strictly follow these protocols and their templates when a user's query matches one of these scenarios. Always use your Google Search tool to acquire the real-time information needed to fill in the template details.`;
+          // --- TRIPMIGO PERSONA AND PROTOCOLS (END) ---
+
+
+          // --- DOM Elements ---
+          const chatContainer = document.getElementById('chat-container');
+          const messagesContainer = document.getElementById('messages');
+          const chatForm = document.getElementById('chat-form');
+          const promptInput = document.getElementById('prompt-input');
+          const sendButton = chatForm ? chatForm.querySelector('button') : null;
+
+          if (!chatContainer || !messagesContainer || !chatForm || !promptInput || !sendButton) {
+            console.error("One or more essential DOM elements are missing.");
+            return; // Safe return inside the IIFE
+          }
+
+          // Initial bot message is already in HTML, so we add its content to history
+          chatHistory.push({
+              role: 'model',
+              parts: [{ text: "Hello! I'm TripMigo AI, your on-the-go travel assistant. How can I help you right now?" }]
+          });
+
+
+          /**
+           * Appends a new message to the chat interface.
+           * @param text The message content (can be HTML).
+           * @param sender 'user' or 'bot'.
+           * @returns The newly created message element.
+           */
+          function appendMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender);
+            
+            if (sender === 'loading') {
+              messageDiv.innerHTML = `<div class="spinner"></div><span>TripMigo is checking the map...</span>`;
+            } else {
+              // Use marked.parse to render Markdown content from the bot
+              messageDiv.innerHTML = sender === 'bot' ? marked.parse(text) : text;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return messageDiv;
+          }
+
+          /**
+           * Renders source links from grounding metadata.
+           * @param groundingAttributions The grounding attributions from the response.
+           * @param container The message element to append the sources to.
+           */
+          function renderSources(groundingAttributions, container) {
+              const sourcesContainer = document.createElement('div');
+              sourcesContainer.className = 'sources';
+              sourcesContainer.innerHTML = '<h3>Sources:</h3>';
+              
+              const list = document.createElement('ol');
+              
+              groundingAttributions.forEach(attribution => {
+                  const uri = attribution.web?.uri;
+                  const title = attribution.web?.title;
+                  
+                  if (uri && title) {
+                      const item = document.createElement('li');
+                      const link = document.createElement('a');
+                      link.href = uri;
+                      link.target = '_blank';
+                      link.textContent = title;
+                      item.appendChild(link);
+                      list.appendChild(item);
+                  }
+              });
+
+              if (list.hasChildNodes()) {
+                  sourcesContainer.appendChild(list);
+                  container.appendChild(sourcesContainer);
+              }
+          }
+
+          /**
+           * Calls the Gemini API with exponential backoff for retries.
+           */
+          async function callGeminiApi(payload, maxRetries = 3, attempt = 0) {
+              const apiUrl = API_URL_BASE + API_KEY;
+              const delay = Math.pow(2, attempt) * 1000;
+
+              if (attempt > 0) {
+                  await new Promise(resolve => setTimeout(resolve, delay));
+                  console.log(`Retrying API call. Attempt ${attempt + 1}...`);
+              }
+
+              try {
+                  const response = await fetch(apiUrl, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(payload)
+                  });
+
+                  if (!response.ok) {
+                      // --- START: Added detailed error logging ---
+                      const errorBody = await response.text();
+                      console.error(`API Error: Status ${response.status}. Response Body:`, errorBody);
+                      // --- END: Added detailed error logging ---
+
+                      if (response.status === 429 && attempt < maxRetries - 1) {
+                          return callGeminiApi(payload, maxRetries, attempt + 1); // Retry on 429
+                      }
+                      throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+
+                  return response.json();
+
+              } catch (error) {
+                  console.error(`Fetch attempt ${attempt + 1} failed:`, error);
+                  throw error;
+              }
+          }
+
+
+          /**
+           * Handles the chat form submission.
+           */
+          chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = promptInput.value.trim();
+
+            if (!prompt) return;
+
+            // Disable form and clear input
+            promptInput.value = '';
+            promptInput.disabled = true;
+            sendButton.disabled = true;
+
+            // 1. Append user message and update history
+            appendMessage(prompt, 'user');
+            chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
+            
+            // 2. Show loading indicator
+            const loadingIndicator = appendMessage('', 'loading');
+
+            // 3. Build API Payload
+            const payload = {
+                contents: chatHistory,
+                tools: [{ google_search: {} }], // Use google_search for the fetch API
+                systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }
+            };
+
+            try {
+                const result = await callGeminiApi(payload);
+                const candidate = result?.candidates?.[0];
+                const text = candidate?.content?.parts?.[0]?.text;
+
+                if (!text) {
+                    throw new Error('Received empty or invalid response from AI model.');
+                }
+
+                // 4. Update history and UI
+                chatHistory.push({ role: 'model', parts: [{ text: text }] });
+                
+                loadingIndicator.remove();
+                const botMessageElement = appendMessage(text, 'bot');
+                
+                // 5. Handle sources
+                const groundingMetadata = candidate.groundingMetadata;
+                if (groundingMetadata?.groundingAttributions?.length > 0) {
+                    renderSources(groundingMetadata.groundingAttributions, botMessageElement);
+                }
+
+            } catch (error) {
+                console.error("Chat failure:", error);
+                loadingIndicator.remove();
+                // Use a custom UI element for errors instead of alert
+                appendMessage('Oops! TripMigo hit a snag. Please check the console or try a different question.', 'bot');
+            } finally {
+                // Re-enable form
+                promptInput.disabled = false;
+                sendButton.disabled = false;
+                promptInput.focus();
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+          });
+
+          // Set focus on the input field when the page loads.
+          document.addEventListener('DOMContentLoaded', () => {
+              promptInput.focus();
+          });
+          
+      })(); // End of IIFE
+    </script>
+  </head>
+  <body>
+    <header>
+      <h1>TripMigo AI ✈️</h1>
+      <p>Your friendly AI Travel Assistant</p>
+    </header>
+    <main id="chat-container">
+      <div id="messages">
+        <div class="message bot">
+            Hello! I'm TripMigo AI, your on-the-go travel assistant. How can I help you right now?
+        </div>
+      </div>
+    </main>
+    <footer>
+      <form id="chat-form">
+        <input type="text" id="prompt-input" placeholder="Ask me anything about your trip..." autocomplete="off" />
+        <button type="submit" aria-label="Send message">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+          </svg>
+        </button>
+      </form>
+    </footer>
+  </body>
+</html>
