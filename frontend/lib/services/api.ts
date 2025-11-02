@@ -186,6 +186,10 @@ export const hotelService = {
         return apiClient.get<Hotel>(`/hotels/${id}`)
     },
 
+    async getHotelSummaries(): Promise<ApiResponse<Record<string, any>>> {
+        return apiClient.get<Record<string, any>>(`/hotels/summaries`)
+    },
+
     async checkAvailability(
         hotelId: string,
         dates: { start: string, end: string }
